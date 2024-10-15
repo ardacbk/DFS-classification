@@ -1,11 +1,18 @@
+from edge import Edge
+
 class Node:
+    VISITED = "visited"
+    UNVISITED = "unvisited"
+    CURRENT = "current"
     def __init__(self, id, pos_x, pos_y,connected_nodes=None):
         self.id = id
         self.pos_x = pos_x
+        self.edges = []
         self.pos_y = pos_y
+        self.visited = False
         if connected_nodes == None:
             connected_nodes = []
         self.connected_nodes = connected_nodes
-        self.visited = False
-    def set_visited(self):
-        self.visited = True
+        for connected_id in self.connected_nodes:
+            self.edges.append(Edge(id,connected_id))
+        self.state = Node.UNVISITED

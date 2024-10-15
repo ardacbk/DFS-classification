@@ -1,5 +1,6 @@
 import math
 import pygame
+from node import Node
 
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
@@ -45,10 +46,12 @@ class Graph:
     def draw_graph(self, screen):
         screen.fill(BLACK)
         for node in self.nodes:
-            if(node.visited == False):
+            if(node.state == Node.UNVISITED):
                 pygame.draw.circle(screen, WHITE, (node.pos_x, node.pos_y), RADIUS, 0)
-            if (node.visited):
-                pygame.draw.circle(screen, (255,0,0), (node.pos_x, node.pos_y), RADIUS, 0)
+            elif (node.state == Node.VISITED):
+                pygame.draw.circle(screen, (255, 0, 0), (node.pos_x, node.pos_y), RADIUS, 0)
+            elif (node.state == Node.CURRENT):
+                pygame.draw.circle(screen, (255,255,0), (node.pos_x, node.pos_y), RADIUS, 0)
             for adj in tuple(node.connected_nodes):
                 draw_arrow(screen, (node.pos_x, node.pos_y), (self.nodes[adj].pos_x, self.nodes[adj].pos_y), WHITE)
             draw_text(screen, str(node.id), (node.pos_x, node.pos_y), BLACK)
@@ -59,10 +62,12 @@ class Graph:
             node = stack.pop()
             if node.visited is False:
                 print("Node " + str(node.id) + " is visited.")
-                node.set_visited()
+                node.state = Node.VISITED
+                node.visited = True
                 self.draw_graph(screen)
                 pygame.display.update()
                 pygame.time.wait(500)
                 for adj in tuple(node.connected_nodes):
                     if not self.nodes[adj].visited:
                         stack.append(self.nodes[adj])
+                        self.nodes[adj].state = Node.CURRENT
