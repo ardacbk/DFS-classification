@@ -6,3 +6,6 @@ class Node:
         if connected_nodes == None:
             connected_nodes = []
         self.connected_nodes = connected_nodes
+        self.visited = False
+    def set_visited(self):
+        self.visited = True
