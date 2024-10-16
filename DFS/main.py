@@ -4,22 +4,33 @@ import pygame
 
 
 pygame.init()
-screen = pygame.display.set_mode((1280, 720))
+screen = pygame.display.set_mode((1280, 960))
 clock = pygame.time.Clock()
 
 
 graph = Graph()
 
-graph.add_node(Node(0, 200, 400, [1, 2]))   # 0 düğümü, 1 ve 2 ile bağlı
-graph.add_node(Node(1, 400, 200, [0, 3, 4]))# 1 düğümü, 0, 3 ve 4 ile bağlı
-graph.add_node(Node(2, 400, 600, [0, 3]))   # 2 düğümü, 0 ve 3 ile bağlı
-graph.add_node(Node(3, 600, 400, [1, 2, 5]))# 3 düğümü, 1, 2 ve 5 ile bağlı
-graph.add_node(Node(4, 600, 100, [1]))      # 4 düğümü, sadece 1 ile bağlı
-graph.add_node(Node(5, 800, 400, [3, 6, 7, 8])) # 5 düğümü, 3, 6, 7 ve 8 ile bağlı
-graph.add_node(Node(6, 800, 600, [5]))      # 6 düğümü, sadece 5 ile bağlı
-graph.add_node(Node(7, 1000, 600, [5,8]))     # 7 düğümü, sadece 5 ile bağlı
-graph.add_node(Node(8, 1000, 300, [5, 7, 9]))  # 8 düğümü, 5 ve 9 ile bağlı
-graph.add_node(Node(9, 1200, 300, [8]))     # 9 düğümü, sadece 8 ile bağlı
+#
+# graph.add_node(Node(0, 200, 400, [1, 2, 3]))  # Node a, connected to b, d, e (1, 3, 4)
+# graph.add_node(Node(1, 400, 200, [2]))        # Node b, connected to c (2)
+# graph.add_node(Node(2, 600, 200))     # Node c, connected to b and f (1, 5)
+# graph.add_node(Node(3, 400, 600, [4,5]))        # Node d, connected to e (4)
+# graph.add_node(Node(4, 600, 600, [2,0]))     # Node e, connected to c and f (2, 5)
+# graph.add_node(Node(5, 800, 400, []))         # Node f, no outgoing edges
+#
+
+# Nodes (A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, G: 6, H: 7, I: 8)
+
+graph.add_node(Node(0, 200, 400,[1,3,4]))  # Node A
+graph.add_node(Node(1, 500, 200,[5]))  # Node B
+graph.add_node(Node(2, 500, 350,[1]))  # Node C
+graph.add_node(Node(3, 500, 500,[2,7]))  # Node D
+graph.add_node(Node(4, 500, 700,[7]))  # Node E
+graph.add_node(Node(5, 800, 250,[6,8]))  # Node F
+graph.add_node(Node(6, 800, 400,[1,2]))  # Node G
+graph.add_node(Node(7, 800, 600))  # Node H
+graph.add_node(Node(8, 1000, 400,[7]))  # Node I
+
 
 graph.DFS(screen)
 running = True

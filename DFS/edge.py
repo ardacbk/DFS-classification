@@ -3,6 +3,8 @@ class Edge:
     TREE = "tree"
     FORWARD = "forward"
     BACK = "back"
+    CROSS = "cross"
+
     def __init__(self, source, dest):
         self.source = source
         self.dest = dest
