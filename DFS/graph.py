@@ -5,10 +5,15 @@ from fontTools.misc.classifyTools import classify
 from node import Node
 from edge import Edge
 
-SCREEN_WIDTH = 1280
-SCREEN_HEIGHT = 720
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+TREE = (144, 238, 144)       # Pastel Green (Tree edges)
+FORWARD = (102, 178, 255)    # Light Sky Blue (Forward edges)
+BACK = (186, 85, 211)        # Medium Orchid (Back edges)
+CROSS = (255, 165, 79)       # Light Orange (Cross edges)
+CURRENT_COLOR = (255, 255, 153)  # Light Yellow (Current node)
+FINISHED_COLOR = (255, 102, 102) # Light Coral (Finished node)
+
 RADIUS = 30
 
 def draw_text(screen, text, position, color):
@@ -53,28 +58,43 @@ class Graph:
         for node in self.nodes:
             if node.state == Node.UNVISITED:
                 pygame.draw.circle(screen, WHITE, (node.pos_x, node.pos_y), RADIUS, 0)
+                draw_text(screen, str(node.id), (node.pos_x, node.pos_y), BLACK)
             elif node.state == Node.FINISHED:
-                pygame.draw.circle(screen, (255, 0, 0), (node.pos_x, node.pos_y), RADIUS, 0)
+                pygame.draw.circle(screen, FINISHED_COLOR, (node.pos_x, node.pos_y), RADIUS, 0)
+                draw_text(screen, str(node.id), (node.pos_x, node.pos_y), WHITE)
             elif node.state == Node.CURRENT:
-                pygame.draw.circle(screen, (255, 255, 0), (node.pos_x, node.pos_y), RADIUS, 0)
-            draw_text(screen, str(node.id), (node.pos_x, node.pos_y), BLACK)
+                pygame.draw.circle(screen, CURRENT_COLOR, (node.pos_x, node.pos_y), RADIUS, 0)
+                draw_text(screen, str(node.id), (node.pos_x, node.pos_y), BLACK)
             time_str = str(node.start_time)+"/"+str(node.end_time)
             draw_text(screen, time_str, (node.pos_x-15, node.pos_y -50), WHITE)
 
 
             for edge in node.edges:
                 if edge.type == Edge.TREE:
-                    color = (0, 255, 0)  # Tree edges are green
+                    color = TREE # Tree edges are green
                 elif edge.type == Edge.BACK:
-                    color = (255, 0, 0)  # Back edges are red
+                    color = BACK  # Back edges are red
                 elif edge.type == Edge.FORWARD:
-                    color = (0, 0, 255)  # Forward edges are blue
+                    color = FORWARD  # Forward edges are blue
                 elif edge.type == Edge.CROSS:
-                    color = (255, 255, 0)  # Cross edges are yellow
+                    color = CROSS  # Cross edges are yellow
                 else:
                     color = WHITE  # Default color for unknown edges
                 draw_arrow(screen, (node.pos_x, node.pos_y), (self.nodes[edge.dest].pos_x, self.nodes[edge.dest].pos_y), color)
 
+        pygame.draw.circle(screen, TREE, (1200, 20), 13)
+        draw_text(screen, "Tree Edge", (1300, 20), WHITE)
+
+        pygame.draw.circle(screen, BACK, (1200, 50), 13)
+        draw_text(screen, "Back Edge", (1300, 50), WHITE)
+
+
+        pygame.draw.circle(screen, FORWARD, (1200, 80), 13)
+        draw_text(screen, "Forward Edge", (1300, 80), WHITE)
+
+
+        pygame.draw.circle(screen, CROSS, (1200, 110), 13)
+        draw_text(screen, "Cross Edge", (1300, 110), WHITE)
 
     def DFS(self, screen):
         self.time = 0
@@ -94,13 +114,13 @@ class Graph:
                 self.classify_edges(neighbor,screen)
             elif node.start_time < neighbor.start_time and node.end_time > neighbor.end_time:
                 edge.type = Edge.FORWARD
-                print("Forward Edge" + str(node.id) + "---->" + str(neighbor.id))
+                print('Forward Edge:', f"{node.id} --> {neighbor.id}")
             elif node.start_time > neighbor.start_time and node.end_time > neighbor.end_time:
                 edge.type = Edge.CROSS
-                print("Cross Edge" + str(node.id) + "---->" + str(neighbor.id))
+                print('Cross Edge:', f"{node.id} --> {neighbor.id}")
             elif node.start_time > neighbor.start_time and node.end_time < neighbor.end_time:
                 edge.type = Edge.BACK
-                print("Back Edge" + str(node.id) + "---->" + str(neighbor.id))
+                print('Back Edge:', f"{node.id} --> {neighbor.id}")
             self.draw_graph(screen)
             pygame.display.update()
             pygame.time.wait(500)
