@@ -2,8 +2,11 @@ import math
 import pygame
 from fontTools.misc.classifyTools import classify
 
+from forest import Forest
 from node import Node
 from edge import Edge
+from forest import Forest
+from forest import ForestNode
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -15,6 +18,8 @@ CURRENT_COLOR = (255, 255, 153)  # Light Yellow (Current node)
 FINISHED_COLOR = (255, 102, 102) # Light Coral (Finished node)
 
 RADIUS = 30
+
+FOREST_RADIUS = 20
 
 def draw_text(screen, text, position, color):
     font = pygame.font.Font(None, 36)
@@ -46,12 +51,10 @@ class Graph:
     def __init__(self):
         self.nodes = []
         self.time = 0
+        self.forest = Forest()
 
     def add_node(self, node):
         self.nodes.append(node)
-
-    def get_nodes(self):
-        return self.nodes
 
     def draw_graph(self, screen):
         screen.fill(BLACK)
@@ -96,14 +99,30 @@ class Graph:
         pygame.draw.circle(screen, CROSS, (1200, 110), 13)
         draw_text(screen, "Cross Edge", (1300, 110), WHITE)
 
+        self.draw_forest(screen)
+
+    def draw_forest(self, screen):
+        for node in self.forest.nodes:
+            pygame.draw.circle(screen, FINISHED_COLOR, (node.pos_x, node.pos_y), FOREST_RADIUS, 0)
+            draw_text(screen, str(node.id), (node.pos_x, node.pos_y), WHITE)
+            if node.left is not None:
+                draw_arrow(screen, (node.pos_x, node.pos_y), (node.left.pos_x, node.left.pos_y), TREE, 10)
+            if node.right is not None:
+                draw_arrow(screen, (node.pos_x, node.pos_y), (node.right.pos_x, node.right.pos_y), TREE,10)
+            for back_node in node.back_nodes:
+                draw_arrow(screen, (node.pos_x, node.pos_y), (back_node.pos_x, back_node.pos_y),BACK,10)
+            for forward_node in node.forward_nodes:
+                draw_arrow(screen, (node.pos_x, node.pos_y), (forward_node.pos_x, forward_node.pos_y),FORWARD,10)
+            for cross_node in node.cross_nodes:
+                draw_arrow(screen, (node.pos_x, node.pos_y), (cross_node.pos_x, cross_node.pos_y),CROSS,10)
     def DFS(self, screen):
         self.time = 0
         self.traversal_array = []
-
+        forest_root = ForestNode(self.nodes[0].id,1200,200)
+        self.forest.add_root(forest_root)
         for node in self.nodes:
             if not node.visited:
                 self.traverse_dfs(node, screen)
-
         print("DFS Traversal:", self.traversal_array)
         self.classify_edges(self.nodes[0], screen)
 
@@ -115,11 +134,14 @@ class Graph:
             elif node.start_time < neighbor.start_time and node.end_time > neighbor.end_time:
                 edge.type = Edge.FORWARD
                 print('Forward Edge:', f"{node.id} --> {neighbor.id}")
+                self.forest.add_forward_node(node.id,neighbor.id)
             elif node.start_time > neighbor.start_time and node.end_time > neighbor.end_time:
                 edge.type = Edge.CROSS
+                self.forest.add_cross_node(node.id,neighbor.id)
                 print('Cross Edge:', f"{node.id} --> {neighbor.id}")
             elif node.start_time > neighbor.start_time and node.end_time < neighbor.end_time:
                 edge.type = Edge.BACK
+                self.forest.add_back_node(node.id,neighbor.id)
                 print('Back Edge:', f"{node.id} --> {neighbor.id}")
             self.draw_graph(screen)
             pygame.display.update()
@@ -145,21 +167,8 @@ class Graph:
                         edge.set_type(Edge.TREE)
                         break
                 print('Tree Edge:', f"{node.id} --> {adj}")
+                self.forest.add_tree_node(node.id,adj)
                 self.traverse_dfs(self.nodes[adj], screen)
-            # else:
-            #     # Classifying edges: Back, Forward, or Cross
-            #     for edge in node.edges:
-            #         if edge.dest == adj:
-            #             if self.start_time[adj] < self.start_time[node.id] and ((self.end_time[node.id] < self.end_time[adj]) or (self.end_time[node.id] == -1 and self.end_time[adj]==-1) ):
-            #                 edge.set_type(Edge.BACK)
-            #                 print('Back Edge:', f"{node.id} --> {adj}")
-            #             elif self.start_time[adj] > self.start_time[node.id] and ((self.end_time[node.id] > self.end_time[adj]) or self.end_time[node.id] == 0):
-            #                 edge.set_type(Edge.FORWARD)
-            #                 print('Forward Edge:', f"{node.id} --> {adj}")
-            #             elif self.start_time[node.id] > self.start_time[adj] and self.end_time[node.id] > self.end_time[adj]:
-            #                 edge.set_type(Edge.CROSS)
-            #                 print('Cross Edge:', f"{node.id} --> {adj}")
-            #             break
 
         node.state = Node.FINISHED
         node.end_time = self.time
