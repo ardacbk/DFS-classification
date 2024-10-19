@@ -1,8 +1,5 @@
 import math
 import pygame
-from fontTools.misc.classifyTools import classify
-
-from forest import Forest
 from node import Node
 from edge import Edge
 from forest import Forest
@@ -47,6 +44,52 @@ def draw_arrow(screen, start, end, color, arrow_size=20, arrow_angle=30, offset=
                   end_adjusted[1] - arrow_size * math.sin(angle + math.radians(arrow_angle)))
     pygame.draw.polygon(screen, color, [end_adjusted, left_wing, right_wing])
 
+def draw_curved_arrow(screen, start, end, color, arrow_size=20, arrow_angle=30, curvature=0.2, offset=10):
+    # Başlangıç ve bitiş noktaları arasındaki açı
+    angle = math.atan2(end[1] - start[1], end[0] - start[0])
+
+    # Düğüm dışına ok eklemek için başlangıç ve bitiş noktalarını biraz ayarlıyoruz
+    start_adjusted = (
+        start[0] + RADIUS * math.cos(angle) + offset * math.sin(angle),
+        start[1] + RADIUS * math.sin(angle) - offset * math.cos(angle)
+    )
+    end_adjusted = (
+        end[0] - RADIUS * math.cos(angle) + offset * math.sin(angle),
+        end[1] - RADIUS * math.sin(angle) - offset * math.cos(angle)
+    )
+
+    # Eğri için kontrol noktası (yumuşak bir bombe oluşturmak için)
+    mid_x = (start_adjusted[0] + end_adjusted[0]) / 2
+    mid_y = (start_adjusted[1] + end_adjusted[1]) / 2
+    control_x = mid_x + curvature * (end_adjusted[1] - start_adjusted[1])
+    control_y = mid_y - curvature * (end_adjusted[0] - start_adjusted[0])
+
+    # Bezier eğrisi ile çizim
+    points = []
+    for t in range(101):
+        t /= 100
+        x = (1 - t) ** 2 * start_adjusted[0] + 2 * (1 - t) * t * control_x + t ** 2 * end_adjusted[0]
+        y = (1 - t) ** 2 * start_adjusted[1] + 2 * (1 - t) * t * control_y + t ** 2 * end_adjusted[1]
+        if t > 0:
+            pygame.draw.line(screen, color, (prev_x, prev_y), (x, y), 3)
+        prev_x, prev_y = x, y
+        points.append((x, y))
+
+    # Oku çizeceğimiz son iki nokta arasındaki açı
+    if len(points) > 2:
+        arrow_angle_direction = math.atan2(points[-1][1] - points[-2][1], points[-1][0] - points[-2][0])
+    else:
+        arrow_angle_direction = angle  # Default olarak eğer eğri kısa ise açıyı orijinal açıyla bırakırız.
+
+    # Oku uca ekle
+    left_wing = (end_adjusted[0] - arrow_size * math.cos(arrow_angle_direction - math.radians(arrow_angle)),
+                 end_adjusted[1] - arrow_size * math.sin(arrow_angle_direction - math.radians(arrow_angle)))
+    right_wing = (end_adjusted[0] - arrow_size * math.cos(arrow_angle_direction + math.radians(arrow_angle)),
+                  end_adjusted[1] - arrow_size * math.sin(arrow_angle_direction + math.radians(arrow_angle)))
+
+    pygame.draw.polygon(screen, color, [end_adjusted, left_wing, right_wing])
+
+
 class Graph:
     def __init__(self):
         self.nodes = []
@@ -85,19 +128,19 @@ class Graph:
                     color = WHITE  # Default color for unknown edges
                 draw_arrow(screen, (node.pos_x, node.pos_y), (self.nodes[edge.dest].pos_x, self.nodes[edge.dest].pos_y), color)
 
-        pygame.draw.circle(screen, TREE, (1200, 20), 13)
-        draw_text(screen, "Tree Edge", (1300, 20), WHITE)
+        pygame.draw.circle(screen, TREE, (1700, 850), 13)
+        draw_text(screen, "Tree Edge", (1800, 850), WHITE)
 
-        pygame.draw.circle(screen, BACK, (1200, 50), 13)
-        draw_text(screen, "Back Edge", (1300, 50), WHITE)
-
-
-        pygame.draw.circle(screen, FORWARD, (1200, 80), 13)
-        draw_text(screen, "Forward Edge", (1300, 80), WHITE)
+        pygame.draw.circle(screen, BACK, (1700, 880), 13)
+        draw_text(screen, "Back Edge", (1800, 880), WHITE)
 
 
-        pygame.draw.circle(screen, CROSS, (1200, 110), 13)
-        draw_text(screen, "Cross Edge", (1300, 110), WHITE)
+        pygame.draw.circle(screen, FORWARD, (1700, 910), 13)
+        draw_text(screen, "Forward Edge", (1800, 910), WHITE)
+
+
+        pygame.draw.circle(screen, CROSS, (1700, 940), 13)
+        draw_text(screen, "Cross Edge", (1800, 940), WHITE)
 
         self.draw_forest(screen)
 
@@ -105,20 +148,18 @@ class Graph:
         for node in self.forest.nodes:
             pygame.draw.circle(screen, FINISHED_COLOR, (node.pos_x, node.pos_y), FOREST_RADIUS, 0)
             draw_text(screen, str(node.id), (node.pos_x, node.pos_y), WHITE)
-            if node.left is not None:
-                draw_arrow(screen, (node.pos_x, node.pos_y), (node.left.pos_x, node.left.pos_y), TREE, 10)
-            if node.right is not None:
-                draw_arrow(screen, (node.pos_x, node.pos_y), (node.right.pos_x, node.right.pos_y), TREE,10)
+            for child in node.children:
+                draw_arrow(screen, (node.pos_x, node.pos_y), (child.pos_x, child.pos_y), TREE, 10)
             for back_node in node.back_nodes:
-                draw_arrow(screen, (node.pos_x, node.pos_y), (back_node.pos_x, back_node.pos_y),BACK,10)
+                draw_curved_arrow(screen, (node.pos_x, node.pos_y), (back_node.pos_x, back_node.pos_y),BACK,10)
             for forward_node in node.forward_nodes:
-                draw_arrow(screen, (node.pos_x, node.pos_y), (forward_node.pos_x, forward_node.pos_y),FORWARD,10)
+                draw_curved_arrow(screen, (node.pos_x, node.pos_y), (forward_node.pos_x, forward_node.pos_y),FORWARD,10)
             for cross_node in node.cross_nodes:
-                draw_arrow(screen, (node.pos_x, node.pos_y), (cross_node.pos_x, cross_node.pos_y),CROSS,10)
+                draw_curved_arrow(screen, (node.pos_x, node.pos_y), (cross_node.pos_x, cross_node.pos_y),CROSS,10)
     def DFS(self, screen):
         self.time = 0
         self.traversal_array = []
-        forest_root = ForestNode(self.nodes[0].id,1200,200)
+        forest_root = ForestNode(self.nodes[0].id,1400,150,None)
         self.forest.add_root(forest_root)
         for node in self.nodes:
             if not node.visited:
@@ -127,22 +168,23 @@ class Graph:
         self.classify_edges(self.nodes[0], screen)
 
     def classify_edges(self,node,screen):
-        for edge in node.edges:
-            neighbor = self.nodes[edge.dest]
-            if edge.type == Edge.TREE:
-                self.classify_edges(neighbor,screen)
-            elif node.start_time < neighbor.start_time and node.end_time > neighbor.end_time:
-                edge.type = Edge.FORWARD
-                print('Forward Edge:', f"{node.id} --> {neighbor.id}")
-                self.forest.add_forward_node(node.id,neighbor.id)
-            elif node.start_time > neighbor.start_time and node.end_time > neighbor.end_time:
-                edge.type = Edge.CROSS
-                self.forest.add_cross_node(node.id,neighbor.id)
-                print('Cross Edge:', f"{node.id} --> {neighbor.id}")
-            elif node.start_time > neighbor.start_time and node.end_time < neighbor.end_time:
-                edge.type = Edge.BACK
-                self.forest.add_back_node(node.id,neighbor.id)
-                print('Back Edge:', f"{node.id} --> {neighbor.id}")
+        for node in self.nodes:
+            for edge in node.edges:
+                neighbor = self.nodes[edge.dest]
+                if edge.type == Edge.TREE:
+                    continue
+                elif node.start_time < neighbor.start_time and node.end_time > neighbor.end_time:
+                    edge.type = Edge.FORWARD
+                    print('Forward Edge:', f"{node.id} --> {neighbor.id}")
+                    self.forest.add_forward_node(node.id,neighbor.id)
+                elif node.start_time > neighbor.start_time and node.end_time > neighbor.end_time:
+                    edge.type = Edge.CROSS
+                    self.forest.add_cross_node(node.id,neighbor.id)
+                    print('Cross Edge:', f"{node.id} --> {neighbor.id}")
+                elif node.start_time > neighbor.start_time and node.end_time < neighbor.end_time:
+                    edge.type = Edge.BACK
+                    self.forest.add_back_node(node.id,neighbor.id)
+                    print('Back Edge:', f"{node.id} --> {neighbor.id}")
             self.draw_graph(screen)
             pygame.display.update()
             pygame.time.wait(500)
