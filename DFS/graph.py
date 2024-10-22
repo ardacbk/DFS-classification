@@ -128,19 +128,19 @@ class Graph:
                     color = WHITE  # Default color for unknown edges
                 draw_arrow(screen, (node.pos_x, node.pos_y), (self.nodes[edge.dest].pos_x, self.nodes[edge.dest].pos_y), color)
 
-        pygame.draw.circle(screen, TREE, (1700, 850), 13)
-        draw_text(screen, "Tree Edge", (1800, 850), WHITE)
+        pygame.draw.circle(screen, TREE, (1700, 20), 13)
+        draw_text(screen, "Tree Edge", (1800, 20), WHITE)
 
-        pygame.draw.circle(screen, BACK, (1700, 880), 13)
-        draw_text(screen, "Back Edge", (1800, 880), WHITE)
-
-
-        pygame.draw.circle(screen, FORWARD, (1700, 910), 13)
-        draw_text(screen, "Forward Edge", (1800, 910), WHITE)
+        pygame.draw.circle(screen, BACK, (1700, 50), 13)
+        draw_text(screen, "Back Edge", (1800, 50), WHITE)
 
 
-        pygame.draw.circle(screen, CROSS, (1700, 940), 13)
-        draw_text(screen, "Cross Edge", (1800, 940), WHITE)
+        pygame.draw.circle(screen, FORWARD, (1700, 80), 13)
+        draw_text(screen, "Forward Edge", (1800, 80), WHITE)
+
+
+        pygame.draw.circle(screen, CROSS, (1700, 110), 13)
+        draw_text(screen, "Cross Edge", (1800, 110), WHITE)
 
         self.draw_forest(screen)
 
