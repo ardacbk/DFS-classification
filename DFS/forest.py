@@ -1,7 +1,3 @@
-from numpy.matlib import empty
-from pyparsing import Empty
-
-
 class ForestNode:
     def __init__(self,id,pos_x,pos_y,parent):
         self.id = id
